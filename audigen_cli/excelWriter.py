@@ -75,7 +75,7 @@ def updateCodeCheckList(wb,llm_generateTestCase, BRD_endDate):
 # -------------------------------
 def startExcelChange(llm_generateTestCase,BRD_startDate,BRD_endDate):
     # Load template
-    impact_analysis_xlsx = load_workbook('template/BTS-10307-Impact Analysis.xlsx')
+    impact_analysis_xlsx = load_workbook('Impact Analysis.xlsx')
     test_case_xlsx = load_workbook('template/Test Cases.xlsx')
     code_checkList_xlsx = load_workbook('template/Code Review Checklist.xlsx')
     print(f"Images in template: {len(impact_analysis_xlsx['Impact Analysis']._images)}")
