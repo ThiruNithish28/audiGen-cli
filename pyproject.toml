@@ -1,0 +1,21 @@
+[project]
+name = "audigen-cli"
+version = "0.1.0"
+description = "a audit doc generation automancs tool cli tool"
+authors = [
+    {name = "thiru"}
+]
+requires-python = ">=3.12"
+dependencies = [
+    "python-docx (>=1.2.0,<2.0.0)",
+    "openpyxl (>=3.1.5,<4.0.0)",
+    "click (>=8.3.2,<9.0.0)",
+    "python-dotenv (>=1.2.2,<2.0.0)",
+    "pydantic (>=2.13.2,<3.0.0)",
+    "google-genai (>=1.73.1,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
