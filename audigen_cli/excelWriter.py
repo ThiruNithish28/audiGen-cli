@@ -1,11 +1,14 @@
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment
+from pathlib import Path
 from audigen_cli import utils
 
-def revisionHistoryChanges(wb, BRD_endDate):
+def revisionHistoryChanges(wb, BRD_endDate,approver: str):
   revision_sheet = wb['Revision History']
   revision_sheet['B8']=BRD_endDate
   revision_sheet['D8']=BRD_endDate
+  revision_sheet['C8']=approver
+
 
 def addTestCases(wb, llm_generateTestCase):
   test_cases_sheet = wb['Test Cases']
@@ -50,51 +53,110 @@ def addTestCases(wb, llm_generateTestCase):
   test_cases_sheet.column_dimensions['B'].width = 45
   test_cases_sheet.column_dimensions['C'].width = 45
 
-def updateImpactAnaylsis(wb,llm_generateTestCase,BRD_startDate,BRD_endDate):
+def updateImpactAnaylsis(
+    wb,
+    llm_generateTestCase,
+    BRD_startDate,
+    BRD_endDate,
+    ticket_id,
+    user: str, 
+    approver:str
+):
   sheet = wb['Impact Analysis']
   effort = utils.calculateEffort(BRD_startDate,BRD_endDate)
+  #Ticket id
+  sheet['C4'].value=ticket_id
+  #complexity
+
+  #priority
+
+  #prepared by
+  sheet['C7'].value= user
+  #assessed by
+  sheet['C13'].value=approver
 
   sheet['E4'].value = llm_generateTestCase.additional_info.brd_rasiedBy
+  # Prepared Date
   sheet['E7'].value = BRD_startDate
+
   sheet['B10'].value = llm_generateTestCase.additional_info.componets_affected
+  #Estimated Effort
   sheet['F10'].value = effort
+
   sheet['G10'].value = BRD_startDate
+  # Actual End Date
   sheet['H10'].value = BRD_endDate
+  # Actual Effort
   sheet['I10'].value = effort
+  # assessed Date
   sheet['E13'].value = BRD_endDate
 
 
-def updateCodeCheckList(wb,llm_generateTestCase, BRD_endDate):
+def updateCodeCheckList(wb,llm_generateTestCase, BRD_endDate, user:str, approver:str):
   sheet = wb['Java Checklist']
   sheet['B6'].value = llm_generateTestCase.additional_info.componets_affected
+  # developed date
   sheet['D7'].value = BRD_endDate
+  #reviwed date
   sheet['D8'].value = BRD_endDate
+  #Developed by
+  sheet['B7'].value=user
+  # Reviewed by
+  sheet['B8'].value=approver
+
+
 
 # -------------------------------
 # main method
 # -------------------------------
-def startExcelChange(llm_generateTestCase,BRD_startDate,BRD_endDate):
+_TEMPLATES = Path(__file__).parent.parent / "template"
+def startExcelChange(
+    llm_generateTestCase,
+    BRD_startDate: str,
+    BRD_endDate: str,
+    out_dir: str,
+    approver: str,
+    user: str,
+    ticket: str,
+):
+    out =Path(out_dir)
+
     # Load template
-    impact_analysis_xlsx = load_workbook('Impact Analysis.xlsx')
-    test_case_xlsx = load_workbook('template/Test Cases.xlsx')
-    code_checkList_xlsx = load_workbook('template/Code Review Checklist.xlsx')
-    print(f"Images in template: {len(impact_analysis_xlsx['Impact Analysis']._images)}")
+    impact_analysis_xlsx = load_workbook(_TEMPLATES / 'Impact Analysis.xlsx')
+    test_case_xlsx = load_workbook(_TEMPLATES / 'Test Cases.xlsx')
+    code_checkList_xlsx = load_workbook(_TEMPLATES / 'Code Review Checklist.xlsx')
+
+    # print(f"Images in template: {len(impact_analysis_xlsx['Impact Analysis']._images)}")
+
     # 1 impact analysis changes
-    updateImpactAnaylsis(impact_analysis_xlsx, llm_generateTestCase,BRD_startDate,BRD_endDate)
+    updateImpactAnaylsis(
+      impact_analysis_xlsx, 
+      llm_generateTestCase,
+      BRD_startDate,
+      BRD_endDate,
+      ticket_id=ticket,
+      user=user,
+      approver=approver
+    )
+
     # 2 testcase xl
-    revisionHistoryChanges(test_case_xlsx,BRD_endDate)
+    revisionHistoryChanges(test_case_xlsx,BRD_endDate,approver)
+
     addTestCases(test_case_xlsx,llm_generateTestCase)
+
     # 3 codeCheckList
-    updateCodeCheckList(code_checkList_xlsx,llm_generateTestCase, BRD_endDate)
+    updateCodeCheckList(code_checkList_xlsx,llm_generateTestCase, BRD_endDate,user, approver)
 
     #save
     test_case_xlsx.calculation.fullCalcOnLoad = True
-    impact_analysis_xlsx.save('Impact Analysis Template.xlsx')
-    test_case_xlsx.save('sampleCases.xlsx')
-    code_checkList_xlsx.save('Code Checklist.xlsx')
 
-    wb2 = load_workbook('Impact Analysis Template.xlsx')
-    ws2 = wb2['Impact Analysis']
-    print(f"Images after save: {len(ws2._images)}")
-    print("All Excel files generated successfully")
+    impact_analysis_xlsx.save(out / f'{ticket}-Impact Analysis Template.xlsx')
+    test_case_xlsx.save(out / f'{ticket}-sampleCases.xlsx')
+    code_checkList_xlsx.save(out / f'{ticket}-Code Checklist.xlsx')
+
+
+    # wb2 = load_workbook('Impact Analysis Template.xlsx')
+    # ws2 = wb2['Impact Analysis']
+    # print(f"Images after save: {len(ws2._images)}")
+    # print("All Excel files generated successfully")
 

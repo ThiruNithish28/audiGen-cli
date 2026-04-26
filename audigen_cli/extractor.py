@@ -9,8 +9,9 @@ SENSITIVE_DATA ={
     "Neeyamo Enterprise Solutions":"[COMPANY]"
 }
 
-def extractDoc():
-  documnet = Document('template/Vendor initiation date and time should be captured in the checklevel report.docx')
+def extractDoc(brd_path):
+  """Extract and sanitize text from a BRD .docx file."""
+  documnet = Document(brd_path)
 
   full_text =""
 
@@ -31,12 +32,9 @@ def extractDoc():
         row_data = [cell.text.strip() for cell in row.cells]
         full_text += "\t".join(row_data) + "\n"
 
-  print(full_text)
 
   sanitized_text = full_text
   for original,placeholder in SENSITIVE_DATA.items():
     sanitized_text = sanitized_text.replace(original, placeholder)
 
-  print("============================")
-  print(sanitized_text)
   return sanitized_text
