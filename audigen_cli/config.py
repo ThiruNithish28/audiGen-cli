@@ -30,6 +30,6 @@ def get(key: str):
     return load_config().get(key)
 
 def set_value(key:str , value:str):
-    config = load_config
+    config = load_config()
     config[key]=value
     save_config(config)

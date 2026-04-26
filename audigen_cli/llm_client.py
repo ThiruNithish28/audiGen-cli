@@ -47,6 +47,5 @@ def callLLM(sanitized_text) :
 
       )
   )
-  print(response.text)
   llm_generateTestCase=response.parsed
   return llm_generateTestCase

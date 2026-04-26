@@ -1,10 +1,12 @@
-import datetime
+from datetime import datetime
+import os
 
 import click
 from pathlib import Path
 from rich.prompt import Prompt, Confirm
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
 from rich import box
 
 from audigen_cli import config as cfg
@@ -21,6 +23,15 @@ def parse_date(value: str) -> str:
     except ValueError:
         raise click.BadParameter(f"Expected DD-MM-YYYY, got: {value}")
 
+def resolve_output_dir(ticket_id: str, output_arg: str | None) -> Path:
+    """
+    Priority: --output arg > config default > current working directory.
+    Always creates a subfolder named after the ticket.
+    """
+    base = output_arg or cfg.get("output_dir") or os.getcwd()
+    out = Path(base) / ticket_id
+    out.mkdir(parents=True, exist_ok=True)
+    return out
 
 # ─────────────────────────────────────────────
 # Root group
@@ -28,9 +39,6 @@ def parse_date(value: str) -> str:
 @click.group()
 def cli():
    """AudiGen — Audit document generator CLI."""
-   print_banner()
-   console.print()
-   console.print("Tips for getting started")
    pass
  
  
@@ -111,8 +119,7 @@ PRIORITY_CHOICES   = click.Choice(["P1", "P2", "P3"],        case_sensitive=Fals
 @click.option("--priority", "-p", default="P2",    type=PRIORITY_CHOICES,    show_default=True, help="Ticket priority.")
 @click.option("--approver", "-a", required=True,  help="Approver name for the test case sheet.")
 @click.option("--output", "-o", default=None,   help="Output folder. Falls back to config, then current directory.")
-def generate():
-    click.echo("hi hello i am thiru")
+def generate(brd, ticket, start, end, user, complexity, priority, approver, output):
     print_banner()
      # ── Validate dates ───────────────────────
     try:
@@ -127,4 +134,64 @@ def generate():
         raise SystemExit(1)
     
     # ── Resolve user ─────────────────────────
-    resolved_user = user or cfg.get("default_user") or 
+    resolved_user = user or cfg.get("default_user")
+    if not resolved_user:
+        resolved_user=Prompt.ask("[yellow]No default user set. Enter your name[/yellow]")
+    
+    # ── Check API key ─────────────────────────
+    api_key = cfg.get("api_key")
+    if not api_key:
+        console.print("[red]✘ Gemini API key not configured.[/red]")
+        console.print("  Run [bold cyan]auditgen config set-key[/bold cyan] first.")
+        raise SystemExit(1)
+ 
+    os.environ["GEMINI_API_KEY"] = api_key
+    # ── Summary panel before running ──────────
+    summary = (
+        f"[cyan]BRD:[/cyan]        {brd}\n"
+        f"[cyan]Ticket:[/cyan]     {ticket}\n"
+        f"[cyan]Dates:[/cyan]      {start}  →  {end}\n"
+        f"[cyan]User:[/cyan]       {resolved_user}\n"
+        f"[cyan]Complexity:[/cyan] {complexity}   [cyan]Priority:[/cyan] {priority}\n"
+        f"[cyan]Approver:[/cyan]   {approver}"
+    )
+    console.print(Panel(summary, title="[bold white]Generate Run[/bold white]", box=box.ROUNDED))
+    console.print()
+
+    # ── Resolve output dir ────────────────────
+    out_dir = resolve_output_dir(ticket, output)
+
+    # ── Step 1: Extract BRD ───────────────────
+    with console.status("[bold cyan][1/3] Extracting BRD...[/bold cyan]", spinner="dots"):
+        from audigen_cli.extractor import extractDoc
+        sanitized_text =extractDoc(brd)
+    console.print("[green]✔[/green] [1/3] BRD extracted.")
+
+    # ── Step 2: LLM ───────────────────────────
+    with console.status("[bold cyan][2/3] Generating test cases via Gemini...[/bold cyan]", spinner="dots2"):
+        from audigen_cli.llm_client import callLLM
+        llm_result = callLLM(sanitized_text)
+    console.print("[green]✔[/green] [2/3] Test cases generated.")
+    
+    # ── Step 3: Write Excel ───────────────────
+    with console.status("[bold cyan][3/3] Writing Excel files...[/bold cyan]", spinner="dots"):
+        from audigen_cli.excelWriter import startExcelChange
+        startExcelChange(
+            llm_generateTestCase=llm_result,
+            BRD_startDate=start,
+            BRD_endDate=end,
+            out_dir=str(out_dir),
+            approver=approver,
+            user=resolved_user,
+            ticket=ticket,
+        )
+    console.print("[green]✔[/green] [3/3] Excel files written.")
+    # ── Done ──────────────────────────────────
+    console.print()
+    console.print(Panel(
+        f"[green]All documents generated successfully![/green]\n"
+        f"[dim]Saved to:[/dim] [bold]{out_dir}[/bold]",
+        box=box.ROUNDED,
+        border_style="green"
+    ))
+    console.print()
