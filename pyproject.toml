@@ -13,10 +13,14 @@ dependencies = [
     "python-dotenv (>=1.2.2,<2.0.0)",
     "pydantic (>=2.13.2,<3.0.0)",
     "google-genai (>=1.73.1,<2.0.0)",
-    "pillow (>=12.2.0,<13.0.0)"
+    "pillow (>=12.2.0,<13.0.0)",
+    "rich (>=15.0.0,<16.0.0)"
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+auditgen = "audigen_cli.cli:cli"
