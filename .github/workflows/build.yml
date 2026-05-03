@@ -1,5 +1,8 @@
 name: Build Windows EXE
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [main]
@@ -30,6 +33,19 @@ jobs:
           --onefile
           --name auditgen
           --add-data "template;template"
+          --hidden-import audigen_cli.extractor
+          --hidden-import audigen_cli.llm_client
+          --hidden-import audigen_cli.excelWriter
+          --hidden-import audigen_cli.config
+          --hidden-import audigen_cli.banner
+          --hidden-import audigen_cli.utils
+          --collect-all google.genai
+          --collect-all docx
+          --collect-all openpyxl
+          --collect-all questionary
+          --collect-all rich
+          --collect-all pydantic
+          --collect-all PIL
           audigen_cli/cli.py
 
       - name: Upload EXE
