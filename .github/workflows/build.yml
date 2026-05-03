@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: windows-latest
@@ -30,6 +33,17 @@ jobs:
           --onefile
           --name auditgen
           --add-data "template;template"
+          --hidden-import audigen_cli.extractor
+          --hidden-import audigen_cli.llm_client
+          --hidden-import audigen_cli.excelWriter
+          --hidden-import audigen_cli.config
+          --hidden-import audigen_cli.banner
+          --hidden-import audigen_cli.utils
+          --collect-all google.genai
+          --collect-all docx
+          --collect-all openpyxl
+          --collect-all questionary
+          --collect-all rich
           audigen_cli/cli.py
 
       - name: Upload EXE
