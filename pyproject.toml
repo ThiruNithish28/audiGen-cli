@@ -5,7 +5,7 @@ description = "a audit doc generation automancs tool cli tool"
 authors = [
     {name = "thiru"}
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"
 dependencies = [
     "python-docx (>=1.2.0,<2.0.0)",
     "openpyxl (>=3.1.5,<4.0.0)",
@@ -25,3 +25,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 auditgen = "audigen_cli.cli:cli"
+[dependency-groups]
+dev = [
+    "pyinstaller (>=6.20.0,<7.0.0)"
+]

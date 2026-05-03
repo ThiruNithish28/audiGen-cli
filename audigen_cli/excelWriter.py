@@ -2,6 +2,12 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 from pathlib import Path
 from audigen_cli import utils
+import sys
+
+def _get_base_path() -> Path:
+  if getattr(sys,'frozen',False) and hasattr(sys, '_MEIPASS'):      # ← "are we running inside an EXE?"
+    return Path(sys._MEIPASS)                                       # ← yes: use PyInstaller's temp folder
+  return Path(__file__).parent.parent                               # ← no: use normal project folder
 
 def revisionHistoryChanges(wb, BRD_endDate,approver: str):
   revision_sheet = wb['Revision History']
@@ -109,7 +115,7 @@ def updateCodeCheckList(wb,llm_generateTestCase, BRD_endDate, user:str, approver
 # -------------------------------
 # main method
 # -------------------------------
-_TEMPLATES = Path(__file__).parent.parent / "template"
+_TEMPLATES = _get_base_path() / "template"
 def startExcelChange(
     llm_generateTestCase,
     BRD_startDate: str,
