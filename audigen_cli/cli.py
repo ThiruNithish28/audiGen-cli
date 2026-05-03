@@ -47,9 +47,9 @@ def _prompt_for_field(key: str) -> str | None:
     field= CONFIG_FIELDS[key]
 
     if field["password"]:
-        value = questionary.password(field["prompt"] + ":").ask()
+        value = _ask(questionary.password(field["prompt"] + ":", style=custom_style))
     else:
-        value = questionary.text(field["prompt"] + ":").ask()
+        value = _ask(questionary.text(field["prompt"] + ":", style=custom_style))
     
     if not value or not value.strip():
         console.print(f"[yellow]⚠ Skipped {field['label']} (no input)[/yellow]")
@@ -58,7 +58,7 @@ def _prompt_for_field(key: str) -> str | None:
     if key == "output_dir":
         path = Path(value.strip())
         if not path.exists():
-            create = questionary.confirm(f"Folder does not exist. Create it?").ask()
+            create = _ask(questionary.confirm(f"Folder does not exist. Create it?", style=custom_style))
             if create:
                 try:
                     path.mkdir(parents=True, exist_ok=True)
@@ -179,7 +179,7 @@ def generate(brd, ticket, start, end, user, complexity, priority, approver, outp
     # ── Resolve every input — flag → prompt fallback ──────────────────
     brd = brd or _ask(questionary.path("BRD file path:", style=custom_style, validate=is_word_file,))
     if not is_word_file(brd):    # Validate if user provided date via flag
-        console.print("[red]✘ BRD must be a .docx file.[/red]")
+        console.print("[red]✘ BRD must be a .doc or .docx file.[/red]")
         raise SystemExit(1)
     
     ticket = ticket or _ask(questionary.text("Ticket ID:", validate=lambda text: True if len(text) > 0 else "Please enter a value", style=custom_style))

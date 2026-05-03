@@ -30,9 +30,17 @@ def resolve_output_dir(ticket_id: str, output_arg: str | None) -> Path:
         or len(ticket_path.parts) != 1
     ):
         raise ValueError(f"Invalid ticket ID '{ticket_id}'. It should be a simple name without slashes or traversal.")
-    base = output_arg or cfg.get("output_dir") or os.getcwd()
-    out = Path(base) / ticket_id
-    out.mkdir(parents=True, exist_ok=True)
+    
+    base_path = Path(output_arg or cfg.get("output_dir") or os.getcwd()).expanduser()
+    if base_path.exists() and not base_path.is_dir():
+        raise ValueError(f"Output path '{base_path}' is not a directory.")
+    
+    out = base_path / ticket_path.name
+    try:
+        out.mkdir(parents=True, exist_ok=True)
+    except OSError as err:
+        raise ValueError(f"Could not create output directory '{out}': {err}") from err
+    
     return out
 
 # -------------------------------
