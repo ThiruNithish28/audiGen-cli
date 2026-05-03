@@ -1,6 +1,39 @@
 
 import math
 from datetime import datetime, timedelta
+import os
+from pathlib import Path
+from audigen_cli import config as cfg
+
+DATE_FORMAT = "%d-%m-%Y"
+
+def _validate_date(value: str) -> bool | str:
+    try:
+        datetime.strptime(value, DATE_FORMAT)
+        return True
+    except ValueError:
+        return f"Expected date in format DD-MM-YYYY e.g. 20-04-2025, got: {value}"
+
+def _validate_date_range(start: str , end: str) -> bool:
+    return datetime.strptime(start, DATE_FORMAT) <= datetime.strptime(end, DATE_FORMAT)
+ 
+def resolve_output_dir(ticket_id: str, output_arg: str | None) -> Path:
+    """
+    Priority: --output arg > config default > current working directory.
+    Always creates a subfolder named after the ticket.
+    """
+    base = output_arg or cfg.get("output_dir") or os.getcwd()
+    out = Path(base) / ticket_id
+    out.mkdir(parents=True, exist_ok=True)
+    return out
+
+# -------------------------------
+# checking select file is word or not
+# -------------------------------
+def is_word_file(path: str) -> bool:
+    # Check if it is a file (not a folder) and ends with .docx or .doc
+    return os.path.isfile(path) and path.lower().endswith((".doc", ".docx"))
+
 
 # -------------------------------
 # autofit row
