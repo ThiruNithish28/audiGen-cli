@@ -5,9 +5,9 @@ from audigen_cli import utils
 import sys
 
 def _get_base_path() -> Path:
-  if getattr(sys,'frozen',False):      # ← "are we running inside an EXE?"
-    return Path(sys.MEIPASS)           # ← yes: use PyInstaller's temp folder
-  return Path(__file__).parent.parent  # ← no: use normal project folder
+  if getattr(sys,'frozen',False) and hasattr(sys, '_MEIPASS'):      # ← "are we running inside an EXE?"
+    return Path(sys._MEIPASS)                                       # ← yes: use PyInstaller's temp folder
+  return Path(__file__).parent.parent                               # ← no: use normal project folder
 
 def revisionHistoryChanges(wb, BRD_endDate,approver: str):
   revision_sheet = wb['Revision History']
