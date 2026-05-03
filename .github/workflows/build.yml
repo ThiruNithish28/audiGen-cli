@@ -44,6 +44,7 @@ jobs:
           --collect-all openpyxl
           --collect-all questionary
           --collect-all rich
+          --collect-all pydantic
           audigen_cli/cli.py
 
       - name: Upload EXE
