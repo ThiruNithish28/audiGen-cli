@@ -5,12 +5,14 @@ env:
 
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -54,3 +56,9 @@ jobs:
           name: auditgen-windows
           path: dist/auditgen.exe
           retention-days: 30
+      
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/auditgen.exe
+          generate_release_notes: true
