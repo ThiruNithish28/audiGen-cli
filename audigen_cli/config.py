@@ -7,6 +7,7 @@ CONFIG_FILE=CONFIG_DIR / "config.json"
 DEFAULTS = {
     "api_key": None,
     "default_user": None,
+    "default_approver": None,
     "output_dir" : None,
 }
 
