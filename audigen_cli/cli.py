@@ -260,3 +260,14 @@ def generate(brd, ticket, start, end, user, complexity, priority, approver, outp
         border_style="green"
     ))
     console.print()
+    
+if __name__ == "__main__":
+    import traceback
+    try:
+        cli()
+    except Exception as e:
+        log_path = Path.home() / "auditgen_crash.log"
+        with open(log_path, "w") as f:
+            f.write(traceback.format_exc())
+        print(f"Crashed. Log saved to: {log_path}")
+        raise SystemExit(1)
