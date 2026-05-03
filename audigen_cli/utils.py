@@ -22,6 +22,14 @@ def resolve_output_dir(ticket_id: str, output_arg: str | None) -> Path:
     Priority: --output arg > config default > current working directory.
     Always creates a subfolder named after the ticket.
     """
+    # Sanitize ticket_id — reject absolute paths, traversal, nested segments
+    ticket_path = Path(ticket_id)
+    if (
+        ticket_path.is_absolute() 
+        or ".." in ticket_path.parts 
+        or len(ticket_path.parts) != 1
+    ):
+        raise ValueError(f"Invalid ticket ID '{ticket_id}'. It should be a simple name without slashes or traversal.")
     base = output_arg or cfg.get("output_dir") or os.getcwd()
     out = Path(base) / ticket_id
     out.mkdir(parents=True, exist_ok=True)

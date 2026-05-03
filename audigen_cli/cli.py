@@ -80,6 +80,13 @@ def _ask(question_fn):
         raise SystemExit(0)
     return result
 
+# For validating date inputs if user enter the date via flag
+def _assert_valid_date(value: str):
+    result=_validate_date(value)
+    if result is not True:
+        console.print(f"[red]✘ {result}[/red]")
+        raise SystemExit(1)
+
 # ─────────────────────────────────────────────
 # Root group
 # ─────────────────────────────────────────────
@@ -165,7 +172,7 @@ def generate(brd, ticket, start, end, user, complexity, priority, approver, outp
     api_key = cfg.get("api_key")
     if not api_key:
         console.print("[red]✘ Gemini API key not configured.[/red]")
-        console.print("  Run [bold cyan]auditgen config set-key[/bold cyan] first.")
+        console.print("  Run [bold cyan]auditgen config setup[/bold cyan] first.")
         raise SystemExit(1)
  
 
@@ -175,9 +182,11 @@ def generate(brd, ticket, start, end, user, complexity, priority, approver, outp
     ticket = ticket or _ask(questionary.text("Ticket ID:", validate=lambda text: True if len(text) > 0 else "Please enter a value", style=custom_style))
 
     start= start or _ask(questionary.text ("Start date (DD-MM-YYYY):", style=custom_style, validate=_validate_date))
-
-    end = end or _ask(questionary.text ("End date (DD-MM-YYYY):", style=custom_style, validate=_validate_date))
+    _assert_valid_date(start) # Validate if user provided date via flag
     
+    end = end or _ask(questionary.text ("End date (DD-MM-YYYY):", style=custom_style, validate=_validate_date))
+    _assert_valid_date(end) # Validate if user provided date via flag
+
     # Date range check 
     if not _validate_date_range(start, end):
         console.print("[red]✘ Start date cannot be after end date.[/red]")
@@ -192,7 +201,11 @@ def generate(brd, ticket, start, end, user, complexity, priority, approver, outp
     priority = priority or _ask(questionary.select("Priority:", choices=["P1", "P2", "P3"], default="P2", style=custom_style))
     
     # ── Resolve output dir ────────────────────
-    out_dir = resolve_output_dir(ticket, output)
+    try:
+        out_dir = resolve_output_dir(ticket, output)
+    except ValueError as e:
+        console.print(f"[red]✘ {e}[/red]")
+        raise SystemExit(1)
 
     # ── Summary panel before running ──────────
     summary = (
