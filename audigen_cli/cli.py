@@ -178,7 +178,10 @@ def generate(brd, ticket, start, end, user, complexity, priority, approver, outp
 
     # ── Resolve every input — flag → prompt fallback ──────────────────
     brd = brd or _ask(questionary.path("BRD file path:", style=custom_style, validate=is_word_file,))
-
+    if not is_word_file(brd):    # Validate if user provided date via flag
+        console.print("[red]✘ BRD must be a .docx file.[/red]")
+        raise SystemExit(1)
+    
     ticket = ticket or _ask(questionary.text("Ticket ID:", validate=lambda text: True if len(text) > 0 else "Please enter a value", style=custom_style))
 
     start= start or _ask(questionary.text ("Start date (DD-MM-YYYY):", style=custom_style, validate=_validate_date))
