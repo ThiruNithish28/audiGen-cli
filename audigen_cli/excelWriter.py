@@ -9,10 +9,10 @@ def _get_base_path() -> Path:
     return Path(sys._MEIPASS)                                       # ← yes: use PyInstaller's temp folder
   return Path(__file__).parent.parent                               # ← no: use normal project folder
 
-def revisionHistoryChanges(wb, BRD_endDate,approver: str):
+def revisionHistoryChanges(wb, BRD_startDate,approver: str):
   revision_sheet = wb['Revision History']
-  revision_sheet['B8']=BRD_endDate
-  revision_sheet['D8']=BRD_endDate
+  revision_sheet['B8']=BRD_startDate
+  revision_sheet['D8']=BRD_startDate
   revision_sheet['C8']=approver
 
 
@@ -59,6 +59,14 @@ def addTestCases(wb, llm_generateTestCase):
   test_cases_sheet.column_dimensions['B'].width = 45
   test_cases_sheet.column_dimensions['C'].width = 45
 
+def updateTestResult(wb,end_date,user):
+  sheet = wb['Test Results - 1']
+  sheet['D5'].value = end_date
+  sheet['D7'].value = end_date
+
+  sheet['B5'].value=user 
+  sheet['B7'].value=user
+
 def updateImpactAnaylsis(
     wb,
     llm_generateTestCase,
@@ -85,6 +93,9 @@ def updateImpactAnaylsis(
   # Prepared Date
   sheet['E7'].value = BRD_startDate
 
+  # Allocated to 
+  sheet['E10'].value = user
+
   sheet['B10'].value = llm_generateTestCase.additional_info.componets_affected
   #Estimated Effort
   sheet['F10'].value = effort
@@ -95,7 +106,7 @@ def updateImpactAnaylsis(
   # Actual Effort
   sheet['I10'].value = effort
   # assessed Date
-  sheet['E13'].value = BRD_endDate
+  sheet['E13'].value = BRD_startDate
 
 
 def updateCodeCheckList(wb,llm_generateTestCase, BRD_endDate, user:str, approver:str):
@@ -146,9 +157,11 @@ def startExcelChange(
     )
 
     # 2 testcase xl
-    revisionHistoryChanges(test_case_xlsx,BRD_endDate,approver)
+    revisionHistoryChanges(test_case_xlsx,BRD_startDate,approver)
 
     addTestCases(test_case_xlsx,llm_generateTestCase)
+
+    updateTestResult(test_case_xlsx,BRD_endDate,user)
 
     # 3 codeCheckList
     updateCodeCheckList(code_checkList_xlsx,llm_generateTestCase, BRD_endDate,user, approver)
@@ -157,7 +170,7 @@ def startExcelChange(
     test_case_xlsx.calculation.fullCalcOnLoad = True
 
     impact_analysis_xlsx.save(out / f'{ticket}-Impact Analysis Template.xlsx')
-    test_case_xlsx.save(out / f'{ticket}-sampleCases.xlsx')
+    test_case_xlsx.save(out / f'{ticket}-Test Cases.xlsx')
     code_checkList_xlsx.save(out / f'{ticket}-Code Checklist.xlsx')
 
 
