@@ -16,16 +16,19 @@ def revisionHistoryChanges(wb, BRD_startDate,approver: str):
   revision_sheet['C8']=approver
 
 
-def addTestCases(wb, llm_generateTestCase):
+def addTestCases(wb, llm_generateTestCase,ticket_id):
   test_cases_sheet = wb['Test Cases']
 
   # -------------------------------
-  # 1. Update Header Field (D4)
+  # 1. Update Header Field (D4,B4)
   # -------------------------------
   test_cases_sheet['D4'].value = (
       llm_generateTestCase.additional_info.componets_affected
   )
 
+  test_cases_sheet['B4']=ticket_id
+  
+  
   # -------------------------------
   # 2. Write Test Cases
   # -------------------------------
@@ -145,6 +148,10 @@ def startExcelChange(
 
     # print(f"Images in template: {len(impact_analysis_xlsx['Impact Analysis']._images)}")
 
+    # change the date format 
+    BRD_startDate = utils.parse_string_to_dateTime(BRD_startDate)
+    BRD_endDate = utils.parse_string_to_dateTime(BRD_endDate)
+    
     # 1 impact analysis changes
     updateImpactAnaylsis(
       impact_analysis_xlsx, 
@@ -159,7 +166,7 @@ def startExcelChange(
     # 2 testcase xl
     revisionHistoryChanges(test_case_xlsx,BRD_startDate,approver)
 
-    addTestCases(test_case_xlsx,llm_generateTestCase)
+    addTestCases(test_case_xlsx,llm_generateTestCase,ticket_id=ticket)
 
     updateTestResult(test_case_xlsx,BRD_endDate,user)
 

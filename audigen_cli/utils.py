@@ -16,6 +16,11 @@ def _validate_date(value: str) -> bool | str:
 
 def _validate_date_range(start: str , end: str) -> bool:
     return datetime.strptime(start, DATE_FORMAT) <= datetime.strptime(end, DATE_FORMAT)
+
+def parse_string_to_dateTime(value: str| datetime):
+    if isinstance(value,datetime):
+        return value
+    return datetime.strptime(value, DATE_FORMAT)
  
 def resolve_output_dir(ticket_id: str, output_arg: str | None) -> Path:
     """
@@ -80,16 +85,22 @@ def auto_adjust_row_height(sheet, row_num, columns, base_height=15):
 
 
 
-def calculateEffort(date1,date2):
-  date1 = datetime.strptime(date1, '%d-%m-%Y')
-  date2 = datetime.strptime(date2, '%d-%m-%Y')
-  current = date1
-  days=0
-  while(current <= date2):
-      day = current.weekday() # Monday is 0, Sunday is 6
-      if(day != 5 and day !=6):
-        days += 1
-      current += timedelta(days=1)
-  total_hrs = days * 6
-  return total_hrs
+def calculateEffort(
+    date1: str| datetime, 
+    date2: str| datetime
+) -> int:
+    """
+    Calculate efforts for Impact anaylsis sheet (per day - 6 hrs working )
+    """
+    date1 = parse_string_to_dateTime(date1)
+    date2 = parse_string_to_dateTime(date2)
+    current = date1
+    days=0
+    while(current <= date2):
+        day = current.weekday() # Monday is 0, Sunday is 6
+        if(day != 5 and day !=6):
+            days += 1
+        current += timedelta(days=1)
+    total_hrs = days * 6
+    return total_hrs
 
