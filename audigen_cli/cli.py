@@ -230,9 +230,13 @@ def generate(brd, ticket, start, end, user, complexity, priority, approver, outp
 
     # ── Step 2: LLM ───────────────────────────
     os.environ["GEMINI_API_KEY"] = api_key
-    with console.status("[bold cyan][2/3] Generating test cases via Gemini...[/bold cyan]", spinner="dots2"):
+    with console.status("[bold cyan][2/3] Generating test cases via Gemini...[/bold cyan]", spinner="dots2") as status:
         from audigen_cli.llm_client import callLLM
-        llm_result = callLLM(sanitized_text)  
+        llm_result = callLLM(sanitized_text, status=status)  
+        if llm_result is None:
+            console.print("\n[red]✘ Failed to generate test cases.[/red]")
+            console.print("[red]All Gemini models are currently rate-limited or unavailable. Please try again in a few minutes.[/red]")
+            raise SystemExit(1)
     console.print("[green]✔[/green] [2/3] Test cases generated.")
     
     # ── Step 3: Write Excel ───────────────────
